@@ -2,8 +2,11 @@
 
 #include "fundamentals.h"
 
-void gotoxy(int x, int y)
-{
+void clearScreen(){
+    cout << "\033[2J\033[1;1H"; // Ascii key to clear console. [Platform Independent]
+}
+
+void gotoxy(int x, int y) {
     // Set console cursor position
     COORD coord;
     coord.X = x;
@@ -11,7 +14,7 @@ void gotoxy(int x, int y)
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-// void changeSystemColor(string bg = theme.background, string fg = theme.foreground)
+
 // {
 //     string command = "color " + bg + fg;
 //     const char* commandCStr = command.c_str();
@@ -35,17 +38,7 @@ void animateText(string sentence)
         cout << sentence[j];
     }
 }
-// void cleanDialogueBox()
-// {
-//     for (int i = 0; i < dialogueBoxHeight - 2; i++)
-//     {
-//         gotoxy(dialogueBoxStart.x + 1, dialogueBoxStart.y + 1 + i);
-//         for (int i = 0; i < dialogueBoxWidth - 2; i++)
-//         {
-//             cout << " ";
-//         }
-//     }
-// }
+
 void customPrint(int x, int y, int width, const std::string& text, int& linesTaken)
 {
     // Initial position
@@ -141,7 +134,7 @@ int getASCIIAtPosition(int x, int y)
 }
 void loadingbar()
 {
-    system("cls");
+    clearScreen();
     printf("\e[?251");
 
     SetConsoleCP(437);
@@ -199,11 +192,6 @@ string toLowerCase(string answer)
     }
     return answer;
 }
-
-// void playAudio(const char *filePath)
-// {
-// 	PlaySound(TEXT("C:/Users/Track Computers/Desktop/track.wav"), NULL, SND_FILENAME | SND_ASYNC);
-// }
 
 void cursorPosition(int x, int y)
 {

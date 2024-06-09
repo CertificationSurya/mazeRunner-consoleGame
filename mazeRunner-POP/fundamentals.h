@@ -3,7 +3,6 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include <fstream>
 #include <string>
 #include <random>
 #include <algorithm>
@@ -24,12 +23,9 @@ using namespace std;
 int response;
 int mazeCols = 14;
 int mazeRows = 8;
-int score = 0;
 int timelimit = 30;
-int levelno = 1;
 int seconds = 30;
-// int dialogueBoxWidth = 40;
-// int dialogueBoxHeight = 2 * mazeRows;
+int level = 1;
 string username; // making a global variable to ask for the name of the user.
 
 bool backToMainMenu = false;
@@ -57,4 +53,4 @@ struct Player {
 
 // Position dialogueBoxStart(90, 5);
 Position mazeStart(5, 5);
-Player superman(mazeStart.x + 1, mazeStart.y + 1, 'a');
+Player superman(mazeStart.x + 1, mazeStart.y + 1, '$');
