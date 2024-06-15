@@ -3,50 +3,54 @@
 #include <conio.h>
 #include <utility>
 #include <windows.h>
+#include <fstream>
+
+#define BOLD "\033[1m"
+#define RESET "\033[0m"
+#define WALL char(219)
+#define MAX_LEVEL 5
 
 using namespace std;
 
+// utils func to get map as per level
 vector<vector<char>> getMap(int level);
 
-// components
-class Player
-{
+// classes
+class Player {
 public:
     int column, row;
     char playerLook;
+    string username;
 
-    Player(int column, int row, char playerLook) : column(column), row(row), playerLook(playerLook){};
+    Player(int column, int row, char playerLook, string username) : column(column), row(row), playerLook(playerLook), username(username) {};
     void rePosition(int col, int row)
     {
         this->column = col;
         this->row = row;
     }
+
+    void storeProgress(int level){
+
+    }
 };
 
-class Maze
-{
+class Maze {
 public:
     vector<vector<char>> mazeCoords;
     pair<int, int> startCoord = {1, 1};
     pair<int, int> endCoord = {8, 7};
     // for maze
-    void initializeMaze(int level)
-    {
+    void initializeMaze(int level) {
         mazeCoords = getMap(level);
     }
 
-    void printMaze(const Player &player)
-    {
-        for (int i = 0; i < mazeCoords.size(); ++i)
-        {
-            for (int j = 0; j < mazeCoords[i].size(); ++j)
-            {
-                if (i == player.row && j == player.column)
-                {
+    void printMaze(const Player &player) {
+        for (int i = 0; i < mazeCoords.size(); ++i) {
+            for (int j = 0; j < mazeCoords[i].size(); ++j) {
+                if (i == player.row && j == player.column) {
                     std::cout << player.playerLook;
                 }
-                else
-                {
+                else {
                     std::cout << mazeCoords[i][j];
                 }
             }
@@ -55,50 +59,65 @@ public:
     };
 };
 
-// struct Wall {
-//     pair<int, int> cell1;
-//     pair<int, int> cell2;
-// };
 
 // Utilities function
 // handle keypress
-bool handleKeyPress(char, Player &, Maze &);
+string handleContinuingPlayer();
+
+bool handleKeyPress(char, Player &, Maze &); // handle movement and check winning.
 void clearScreen();
 
-int main()
-{
+int main() {
+    int playerChoice = 1;
+    string username;
+    while (playerChoice){
+        cout<< "Hello stranger are you here for starting a \n" << BOLD << "1. NEW GAME \n" << "2. CONTINUE \n" << RESET;
+        cin>> playerChoice;
+
+        if (playerChoice == 1) {
+            clearScreen();
+            cout<< "Enter Your name, Thrill Seeker: ";
+            cin>> username;
+            break;
+        }
+        else if (playerChoice == 2) {
+            username = handleContinuingPlayer();
+            break;
+        }
+
+    }
+
     int level = 1;
     Maze maze;
     maze.initializeMaze(level);
 
-    cout << "Enter the asci code for your character: ";
+    cout << "Enter the ascii code for your character: ";
     char playerLook = _getch();
-    Player player(maze.startCoord.first, maze.startCoord.second, playerLook);
+    Player player(maze.startCoord.first, maze.startCoord.second, playerLook, username);
 
-    while (true)
-    {
+
+
+
+    while (true) {
         maze.printMaze(player);
         char key = _getch();
         bool win = handleKeyPress(key, player, maze);
-        if (win)
-        {
-            if (level == 3)
-            {
+        if (win) {
+            if (level == MAX_LEVEL)  {
                 clearScreen();
-                cout << "\033[1m";
+                cout << BOLD;
                 cout << "Congratulation, You Won!";
-                cout << "\033[0m";
-                Sleep(2000);
+                cout << RESET;
+                Sleep(1500);
                 break;
             }
-            else
-            {
-                cout << "\033[1m";
+            else {
+                cout << BOLD;
                 cout << "On to the next level: lv. " << ++level;
-                cout << "\033[0m";
+                cout << RESET;
                 player.rePosition(maze.startCoord.first, maze.startCoord.second);
                 maze.initializeMaze(level);
-                Sleep(1000);
+                Sleep(1250);
             }
         }
         clearScreen();
@@ -108,13 +127,11 @@ int main()
 }
 
 // utilities function
-bool handleKeyPress(char key, Player &player, Maze &maze)
-{
+bool handleKeyPress(char key, Player &player, Maze &maze) {
     int prevX = player.row;
     int prevY = player.column;
 
-    switch (key)
-    {
+    switch (key) {
     case 72:  // Up Arrow key code
     case 'w': // w
         prevX = player.row;
@@ -137,27 +154,23 @@ bool handleKeyPress(char key, Player &player, Maze &maze)
         break;
     case 27: // ESCAPE key
     case 'q':
-        throw std::runtime_error("BreakException");
+        throw std::runtime_error("Quitting Game!");
         break;
     default:
         break;
     }
 
-    if (player.column >= 0 && player.column < maze.mazeCoords[player.column].size() && player.row >= 0 && player.row < maze.mazeCoords[player.row].size())
-    {
+    if (player.column >= 0 && player.column < maze.mazeCoords[player.column].size() && player.row >= 0 && player.row < maze.mazeCoords.size()) {
         char item = maze.mazeCoords[player.row][player.column];
-        if (item == '#')
-        {
+        if (item == WALL) {
             player.column = prevY;
             player.row = prevX;
         }
-        else if (item == 'E')
-        {
+        else if (item == 'E')  {
             return true;
         }
     }
-    else
-    {
+    else {
         player.column = prevY;
         player.row = prevX;
         std::cout << "Invalid position!" << std::endl;
@@ -166,63 +179,119 @@ bool handleKeyPress(char key, Player &player, Maze &maze)
     return false;
 }
 
-vector<vector<char>> getMap(int level)
-{
+//  handles players that wanna continue
+string handleContinuingPlayer() {
+    
+}
 
-    switch (level)
-    {
+
+
+void clearScreen() {
+    cout << "\033[2J\033[1;1H";
+}
+
+vector<vector<char>> getMap(int level) {
+
+    switch (level) {
     case 1:
         return {
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-            {'#', 'S', ' ', ' ', '#', ' ', ' ', ' ', ' ', '#'},
-            {'#', '#', '#', ' ', '#', ' ', '#', '#', ' ', '#'},
-            {'#', ' ', '#', ' ', ' ', ' ', '#', ' ', ' ', '#'},
-            {'#', ' ', '#', '#', '#', ' ', '#', ' ', '#', '#'},
-            {'#', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#', '#'},
-            {'#', '#', '#', ' ', '#', '#', '#', ' ', ' ', '#'},
-            {'#', ' ', '#', ' ', ' ', ' ', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', '#', ' ', ' ', 'E', ' ', '#'},
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'}};
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+            {WALL, 'S',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+            {WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, WALL, ' ',  WALL},
+            {WALL, ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  WALL},
+            {WALL, ' ',  WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, WALL},
+            {WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, WALL},
+            {WALL, WALL, WALL, ' ',  WALL, WALL, WALL, ' ',  ' ',  WALL},
+            {WALL, ' ',  WALL, ' ',  ' ',  ' ',  WALL, WALL, ' ',  WALL},
+            {WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  'E',  ' ',  WALL},
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL}};
     case 2:
         return {
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-            {'#', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', '#'},
-            {'#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', '#', ' ', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', ' ', '#'},
-            {'#', '#', ' ', '#', ' ', '#', ' ', '#', '#', ' ', '#', ' ', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', '#', ' ', '#', '#', ' ', '#', ' ', '#', ' ', '#'},
-            {'#', ' ', '#', '#', ' ', '#', ' ', '#', '#', ' ', '#', ' ', '#', ' ', '#'},
-            {'#', ' ', ' ', '#', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#'},
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', 'E', '#'}};
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+            {WALL, 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', ' ', WALL},
+            {WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', WALL, ' ', ' ', ' ', WALL, ' ', ' ', WALL, ' ', ' ', ' ', WALL},
+            {WALL, WALL, ' ', WALL, ' ', WALL, ' ', WALL, WALL, ' ', WALL, ' ', WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', WALL, ' ', WALL, WALL, ' ', WALL, ' ', WALL, ' ', WALL},
+            {WALL, ' ', WALL, WALL, ' ', WALL, ' ', WALL, WALL, ' ', WALL, ' ', WALL, ' ', WALL},
+            {WALL, ' ', ' ', WALL, ' ', WALL, ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', WALL},
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, 'E', WALL}};
     case 3:
         return {
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-            {'#', 'S', ' ', '#', ' ', ' ', ' ', '#', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#'},
-            {'#', '#', ' ', '#', ' ', '#', ' ', '#', ' ', '#', ' ', '#', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#'},
-            {'#', ' ', '#', '#', '#', '#', '#', ' ', '#', '#', ' ', '#', ' ', '#', '#', '#'},
-            {'#', ' ', '#', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#'},
-            {'#', ' ', '#', ' ', '#', ' ', '#', ' ', '#', '#', '#', '#', '#', '#', ' ', '#'},
-            {'#', ' ', '#', ' ', '#', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', '#'},
-            {'#', ' ', '#', ' ', '#', '#', '#', '#', ' ', '#', '#', ' ', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', ' ', ' ', '#'},
-            {'#', ' ', '#', '#', '#', '#', ' ', '#', ' ', '#', '#', '#', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', '#', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-            {'#', '#', '#', '#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-            {'#', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ', '#'},
-            {'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', 'E', '#'},
-            {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'}};
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+            {WALL, 'S', ' ', WALL, ' ', ' ', ' ', WALL, ' ', WALL, ' ', ' ', ' ', ' ', ' ', WALL},
+            {WALL, WALL, ' ', WALL, ' ', WALL, ' ', WALL, ' ', WALL, ' ', WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', WALL, ' ', ' ', ' ', ' ', ' ', WALL, ' ', ' ', ' ', WALL},
+            {WALL, ' ', WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', WALL, ' ', WALL, WALL, WALL},
+            {WALL, ' ', WALL, ' ', ' ', ' ', WALL, ' ', ' ', ' ', ' ', WALL, ' ', ' ', ' ', WALL},
+            {WALL, ' ', WALL, ' ', WALL, ' ', WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', WALL, ' ', WALL, ' ', WALL, ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', WALL},
+            {WALL, ' ', WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', ' ', WALL, ' ', ' ', ' ', ' ', WALL},
+            {WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, ' ', WALL, WALL, WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', WALL, ' ', WALL, ' ', ' ', ' ', ' ', ' ', ' ', ' ', WALL},
+            {WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', ' ', ' ', ' ', ' ', ' ', WALL},
+            {WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL},
+            {WALL, ' ', ' ', ' ', ' ', ' ', ' ', ' ', WALL, ' ', ' ', ' ', ' ', ' ', 'E', WALL},
+            {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL}};
+
+    case 4:
+        return {
+        {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, 'S',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, WALL, WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ', ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, WALL, ' ', WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, ' ', WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', ' ', ' ', ' ', 'E'},
+        {WALL, WALL, WALL, ' ', WALL, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', WALL, WALL, ' ', WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, ' ', WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', ' ', ' ', ' ', ' ', WALL, WALL, WALL}};
+        
+    case 5:
+        return {
+        {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, 'S',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL},
+        {WALL, ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  WALL},
+        {WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, ' ',  WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  WALL, ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, WALL, WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, ' ',  WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, ' ',  WALL, WALL, WALL, WALL},
+        {WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  WALL, ' ',  ' ',  ' ',  ' ',  WALL},
+        {WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', ' ', ' ', WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', ' ', WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, ' ', ' ', ' ', WALL, ' ', WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', ' ', ' ', WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, ' ', ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', ' ', ' ', ' ', ' ', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', WALL, WALL},
+        {WALL, WALL, WALL, WALL, ' ', WALL, WALL, ' ', ' ', 'E', WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, ' ', WALL, WALL, WALL, WALL, WALL}
+        };
 
     default:
         break;
     }
 
     return {
-        {' ', ' '},
-        {' ', ' '}};
-}
-void clearScreen()
-{
-    cout << "\033[2J\033[1;1H";
+        {{' '}}
+    };
 }
